@@ -1,17 +1,35 @@
-# ami for amazon hvm version 2
-data "aws_ami" "amazon_linux_v2" {
+# Get latest Amazon Linux 2 AMI
+data "aws_ami" "amazon_linux_2" {
   most_recent = true
-
+  owners      = ["amazon"]
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-2*"]
+    values = ["amzn2-ami-hvm*"]
   }
+}
 
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+####################
+# RESOURCE OUTPUTS
+####################
 
-  owners = ["137112412989"] # Amazon
 
+output "ami_id_out" {
+  value = data.aws_ami.amazon_linux_2.id
+}
+
+output "ami_arn_out" {
+  value = data.aws_ami.amazon_linux_2.arn
+}
+
+output "ami_description_out" {
+  value = data.aws_ami.amazon_linux_2.description
+}
+
+
+output "ami_kernel_id_out" {
+  value = data.aws_ami.amazon_linux_2.kernel_id
+}
+
+output "ami_product_codes_out" {
+  value = data.aws_ami.amazon_linux_2.product_codes
 }

@@ -3,13 +3,13 @@
 #   type = string
 #   default = "aws_subnet.internal_db_subnet.id"
 # }
-variable "ami" {
-  type = string
-  default = "data.aws_ami.amazon_linux_v2.id"
-}
+
+# ami for amazon hvm version 2 db server
+# Get latest Amazon Linux 2 AMI
+
 
 resource "aws_instance" "db_server" {
-  ami                  = var.ami
+  ami                  = data.aws_ami.amazon_linux_2.id
   subnet_id            = aws_subnet.internal_db_subnet.id
   instance_type        = "t3.micro"
   # iam_instance_profile = aws_iam_instance_profile.bastion_profile.name
@@ -30,8 +30,6 @@ resource "aws_instance" "db_server" {
     EOF
   tags = {
     Name    = "Database Server"
-    # Env     = var.environment
-    # Project = var.project_name
   }
 } 
 

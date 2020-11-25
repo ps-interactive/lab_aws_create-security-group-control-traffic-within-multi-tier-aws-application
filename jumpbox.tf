@@ -14,6 +14,8 @@ variable "jumpbox_subnet_id" {
 # JUMPBOX EC2 CONFIG DATA
 ###############################
 
+
+
 # Restrict to EC2 Instance Connect from us-west-2
 data "aws_ip_ranges" "ec2-connect-usw2" {
   regions  = ["us-west-2"]
@@ -94,8 +96,8 @@ resource "aws_security_group" "ssh-access" {
 # INSTANCE
 ####################
 
-resource "aws_instance" "lab-ec2" {
-  ami                    = data.aws_ami.amazon_linux_v2.id
+resource "aws_instance" "jumpbox_server" {
+  ami                    = data.aws_ami.amazon_linux_2.id
   instance_type          = "t2.small"
   monitoring             = false
   vpc_security_group_ids = [aws_security_group.ssh-access.id]
@@ -103,7 +105,7 @@ resource "aws_instance" "lab-ec2" {
   # put in jumpbox subnet
   subnet_id = aws_subnet.jumpbox_subnet.id
   tags = {
-    Name = "Lab-Jumpbox-VM"
+    Name = "Jumpbox Server"
   }
 }
 
@@ -111,30 +113,10 @@ resource "aws_instance" "lab-ec2" {
 # JUMPBOX OUTPUTS
 ####################
 
-output "ami_id_out" {
-  value = data.aws_ami.amazon_linux_v2.id
-}
-
-output "ami_arn_out" {
-  value = data.aws_ami.amazon_linux_v2.arn
-}
-
-output "ami_description_out" {
-  value = data.aws_ami.amazon_linux_v2.description
-}
-
-
-output "ami_kernel_id_out" {
-  value = data.aws_ami.amazon_linux_v2.kernel_id
-}
-
-output "ami_product_codes_out" {
-  value = data.aws_ami.amazon_linux_v2.product_codes
-}
 
 output "public_ip_out" {
-  value = aws_instance.lab-ec2.*.public_ip
+  value = aws_instance.jumpbox_server.*.public_ip
 }
 output "public_dns_out" {
-  value = aws_instance.lab-ec2.*.public_dns
+  value = aws_instance.jumpbox_server.*.public_dns
 }
