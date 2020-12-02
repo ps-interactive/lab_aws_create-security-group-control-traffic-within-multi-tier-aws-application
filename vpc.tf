@@ -1,6 +1,6 @@
 
 # Lab VPC
-resource "aws_vpc" "lab_vpc" {
+resource "aws_vpc" "lab" {
   cidr_block       = "10.0.0.0/16"
   instance_tenancy = "default"
 
@@ -9,9 +9,40 @@ resource "aws_vpc" "lab_vpc" {
   }
 }
 
+# Internet Gateway
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.lab.id
+
+  tags = {
+    Name = "Internet Gateway for Lab VPC"
+  }
+}
+
+# Public Route table
+resource "aws_route_table" "public_route" {
+  vpc_id = aws_vpc.lab.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+
+  tags = {
+    Name = "Public Route Table"
+  }
+}
+# Private Route table
+resource "aws_default_route_table" "private_route" {
+  default_route_table_id = aws_vpc.lab.default_route_table_id
+
+  tags = {   
+    Name = "Private Route Table"
+  } 
+} 
+
 # external web subnet, load balancers
 resource "aws_subnet" "external_web_subnet" {
-  vpc_id                  = aws_vpc.lab_vpc.id
+  vpc_id                  = aws_vpc.lab.id
   cidr_block              = "10.0.10.0/24"
   map_public_ip_on_launch = true
   
@@ -22,7 +53,7 @@ resource "aws_subnet" "external_web_subnet" {
 
 # internal web subnet, web servers
 resource "aws_subnet" "internal_web_subnet" {
-  vpc_id                  = aws_vpc.lab_vpc.id
+  vpc_id                  = aws_vpc.lab.id
   cidr_block              = "10.0.20.0/24"
   map_public_ip_on_launch = false
 
@@ -33,7 +64,7 @@ resource "aws_subnet" "internal_web_subnet" {
 
 # internal db subnet, db servers
 resource "aws_subnet" "internal_db_subnet" {
-  vpc_id                  = aws_vpc.lab_vpc.id
+  vpc_id                  = aws_vpc.lab.id
   cidr_block              = "10.0.30.0/24"
   map_public_ip_on_launch = false
 
@@ -44,11 +75,19 @@ resource "aws_subnet" "internal_db_subnet" {
 
 # internal management subnet, jumpbox or bastion servers
 resource "aws_subnet" "jumpbox_subnet" {
-  vpc_id                  = aws_vpc.lab_vpc.id
+  vpc_id                  = aws_vpc.lab.id
   cidr_block              = "10.0.100.0/24"
   map_public_ip_on_launch = true #required for ec2-connect?
 
   tags = {
     Name = "Jumpbox Subnet"
   }  
+}
+
+# Associate management Subnet with Public Route Table
+resource "aws_route_table_association" "public_subnet_assoc" {
+  count          = 2
+  route_table_id = aws_route_table.public_route.id
+  subnet_id      = aws_subnet.jumpbox_subnet.id
+  depends_on     = [aws_route_table.public_route, aws_subnet.jumpbox_subnet]
 }

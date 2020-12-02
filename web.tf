@@ -9,9 +9,9 @@
 
 
 resource "aws_instance" "web_server" {
-  ami                  = data.aws_ami.amazon_linux_2.id
+  ami                  = data.aws_ami.amazon_linux_v2.id
   subnet_id            = aws_subnet.internal_web_subnet.id
-  instance_type        = "t2.nano"
+  instance_type        = "t3.micro"
   # iam_instance_profile = aws_iam_instance_profile.bastion_profile.name
   # security_groups      = [aws_security_group.web.id]
   user_data            = <<-EOF
@@ -46,7 +46,7 @@ resource "aws_instance" "web_server" {
 # # web instance
 # resource "aws_web_instance" "lab_rds" {
 #   identifier          = "lab-web-instance"
-#   instance_class      = "web.t2.micro"
+#   instance_class      = "web.t3.micro"
 #   allocated_storage   = 10
 #   engine              = "mysql"
 #   engine_version      = "5.7"

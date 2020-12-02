@@ -9,7 +9,7 @@
 
 
 resource "aws_instance" "db_server" {
-  ami                  = data.aws_ami.amazon_linux_2.id
+  ami                  = data.aws_ami.amazon_linux_v2.id
   subnet_id            = aws_subnet.internal_db_subnet.id
   instance_type        = "t3.micro"
   # iam_instance_profile = aws_iam_instance_profile.bastion_profile.name
@@ -48,7 +48,7 @@ resource "aws_instance" "db_server" {
 # # db instance
 # resource "aws_db_instance" "lab_rds" {
 #   identifier          = "lab-db-instance"
-#   instance_class      = "db.t2.micro"
+#   instance_class      = "db.t3.micro"
 #   allocated_storage   = 10
 #   engine              = "mysql"
 #   engine_version      = "5.7"

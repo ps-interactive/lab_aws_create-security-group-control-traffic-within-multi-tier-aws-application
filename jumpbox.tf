@@ -1,7 +1,7 @@
 # variables, outside dependencies
 # variable "vpc_id" {
 #   type = string
-#   default = "aws_vpc.lab_vpc.id"
+#   default = "aws_vpc.lab.id"
 # }
 variable "jumpbox_subnet_id" {
   type = string
@@ -59,6 +59,39 @@ data "cloudinit_config" "install-requirements-config-script" {
 
 
 ###############################
+# KEYPAIR for alternate access
+###############################
+
+#replace provisioner and provide key file instead
+resource "null_resource" "ssh-gen" {
+ 
+  provisioner "local-exec" {
+    #command = "apk add openssh; ssh-keygen -q -N \"\" -t rsa -b 4096 -f terrakey; chmod 400 terrakey..pub; ls"
+    command = "echo using provided key files"
+  }
+}
+data local_file terrakey_public {
+  filename = "./src/lab-ec2.pub"
+  depends_on = [null_resource.ssh-gen]
+}
+
+data local_file terrakey_private {
+    filename = "./src/lab-ec2.key"
+    depends_on = [null_resource.ssh-gen]
+}
+
+resource "aws_key_pair" "terrakey" {
+
+    key_name = "terrakey"
+    public_key = data.local_file.terrakey_public.content
+    depends_on = [
+        null_resource.ssh-gen
+    ]
+
+}
+
+
+###############################
 # SECURITY
 ###############################
 
@@ -66,15 +99,15 @@ data "cloudinit_config" "install-requirements-config-script" {
 resource "aws_security_group" "ssh-access" {
   name        = "ssh-security-group"
   description = "Allow SSH traffic"
-  vpc_id      = aws_vpc.lab_vpc.id
+  vpc_id      = aws_vpc.lab.id
 
   ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    #cidr_blocks = [var.cidr_block_world] #accessible from world
-    cidr_blocks = data.aws_ip_ranges.ec2-connect-usw2.cidr_blocks #accessible from EC2-Connect only
+    cidr_blocks = [var.cidr_block_world] #accessible from world
+    #cidr_blocks = data.aws_ip_ranges.ec2-connect-usw2.cidr_blocks #accessible from EC2-Connect only
 
   }
 
@@ -97,11 +130,12 @@ resource "aws_security_group" "ssh-access" {
 ####################
 
 resource "aws_instance" "jumpbox_server" {
-  ami                    = data.aws_ami.amazon_linux_2.id
+  ami                    = data.aws_ami.amazon_linux_v2.id
   instance_type          = "t2.small"
   monitoring             = false
   vpc_security_group_ids = [aws_security_group.ssh-access.id]
   user_data              = data.cloudinit_config.install-requirements-config-script.rendered
+  key_name                     = aws_key_pair.terrakey.key_name  
   # put in jumpbox subnet
   subnet_id = aws_subnet.jumpbox_subnet.id
   tags = {
@@ -120,3 +154,8 @@ output "public_ip_out" {
 output "public_dns_out" {
   value = aws_instance.jumpbox_server.*.public_dns
 }
+
+# output "ssh_command_out" {
+#   value = format("%s@%s -i %s","ec2-user",aws_instance.jumpbox_server.*.public_dns,  data.terrakey_private.filename )
+# }
+#  ssh ec23-user@ec2-35-164-221-205.us-west-2.compute.amazonaws.com -i .\src\lab-ec2.key
