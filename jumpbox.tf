@@ -63,21 +63,29 @@ data "cloudinit_config" "install-requirements-config-script" {
 ###############################
 
 #replace provisioner and provide key file instead
-resource "null_resource" "ssh-gen" {
+resource "null_resource" "ssh_gen" {
  
   provisioner "local-exec" {
     #command = "apk add openssh; ssh-keygen -q -N \"\" -t rsa -b 4096 -f terrakey; chmod 400 terrakey..pub; ls"
     command = "echo using provided key files"
   }
+
+}
+resource "null_resource" "pwsh_setup" {
+  provisioner "local-exec" {
+  command = "pwsh-init-script.ps1"
+
+  interpreter = ["pwsh", "-File"]
+}
 }
 data local_file terrakey_public {
   filename = "./src/lab-ec2.pub"
-  depends_on = [null_resource.ssh-gen]
+  depends_on = [null_resource.ssh_gen]
 }
 
 data local_file terrakey_private {
     filename = "./src/lab-ec2.key"
-    depends_on = [null_resource.ssh-gen]
+    depends_on = [null_resource.ssh_gen]
 }
 
 resource "aws_key_pair" "terrakey" {
@@ -85,7 +93,7 @@ resource "aws_key_pair" "terrakey" {
     key_name = "terrakey"
     public_key = data.local_file.terrakey_public.content
     depends_on = [
-        null_resource.ssh-gen
+        null_resource.ssh_gen
     ]
 
 }
@@ -131,7 +139,7 @@ resource "aws_security_group" "ssh-access" {
 
 resource "aws_instance" "jumpbox_server" {
   ami                    = data.aws_ami.amazon_linux_v2.id
-  instance_type          = "t2.small"
+  instance_type          = var.jumpbox_instance_type
   monitoring             = false
   vpc_security_group_ids = [aws_security_group.ssh-access.id]
   user_data              = data.cloudinit_config.install-requirements-config-script.rendered

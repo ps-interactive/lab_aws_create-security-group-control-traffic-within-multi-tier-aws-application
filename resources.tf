@@ -30,6 +30,17 @@ data "aws_ami" "amazon_linux_v2" {
 ####################
 
 
+# VPC
+output "vpc_id_out" {
+  value = aws_vpc.lab.id
+}
+
+output "vpc_arn_out" {
+  value = aws_vpc.lab.arn
+}
+
+# AMI
+
 output "ami_id_out" {
   value = data.aws_ami.amazon_linux_v2.id
 }

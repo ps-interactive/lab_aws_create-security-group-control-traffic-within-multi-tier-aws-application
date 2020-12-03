@@ -3,7 +3,7 @@
 resource "aws_vpc" "lab" {
   cidr_block       = "10.0.0.0/16"
   instance_tenancy = "default"
-
+  enable_dns_hostnames = true
   tags = {
     Name = "Lab VPC"
   }
@@ -40,26 +40,38 @@ resource "aws_default_route_table" "private_route" {
   } 
 } 
 
-# external web subnet, load balancers
-resource "aws_subnet" "external_web_subnet" {
-  vpc_id                  = aws_vpc.lab.id
-  cidr_block              = "10.0.10.0/24"
-  map_public_ip_on_launch = true
+# # external web subnet, load balancers
+# resource "aws_subnet" "load_balancer_subnet" {
+#   vpc_id                  = aws_vpc.lab.id
+#   cidr_block              = "10.0.10.0/24"
+#   map_public_ip_on_launch = true
   
-  tags = {
-    Name = "External Web Subnet"
-  }  
-}
+#   tags = {
+#     Name = "External Load Balancer Subnet"
+#   }  
+# }
 
-# internal web subnet, web servers
-resource "aws_subnet" "internal_web_subnet" {
+# # SINGLE internal web subnet, web servers
+# resource "aws_subnet" "internal_web_subnet" {
+#   vpc_id                  = aws_vpc.lab.id
+#   cidr_block              = "10.0.20.0/24"
+#   map_public_ip_on_launch = false
+
+#   tags = {
+#     Name = "Internal Web Subnet"
+#   }  
+# }
+
+# SET OF WEB TIER SUBNETS
+resource "aws_subnet" "web_subnets" {
+  for_each                = var.web_subnets
   vpc_id                  = aws_vpc.lab.id
-  cidr_block              = "10.0.20.0/24"
+  cidr_block              = each.value
   map_public_ip_on_launch = false
-
+  availability_zone       = each.key
   tags = {
     Name = "Internal Web Subnet"
-  }  
+  }    
 }
 
 # internal db subnet, db servers
