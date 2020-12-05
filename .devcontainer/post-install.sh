@@ -3,7 +3,7 @@
 
 DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
-sudo apt-get install -y --no-install-recommends apt-utils dialog dnsutils httpie wget unzip curl jq powershell
+sudo apt-get install -y --no-install-recommends apt-utils dialog dnsutils httpie wget unzip curl jq
 DEBIAN_FRONTEND=dialog
 
 
@@ -36,3 +36,7 @@ unzip awscliv2.zip
 sudo ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
 # verify
 aws --version
+
+# INSTALL pwsh modules
+pwsh
+Install-Module AWSPowerShell.NetCore

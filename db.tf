@@ -29,7 +29,7 @@ resource "aws_instance" "db_server" {
     mysql -u root -p**** < /lab_aws_implement-data-ingestion-solution-using-aws-database-migration-aws/user_perm.sql
     EOF
   tags = {
-    Name    = "Database Server"
+    Name    = "database-server"
   }
 } 
 

@@ -97,9 +97,18 @@ resource "aws_subnet" "jumpbox_subnet" {
 }
 
 # Associate management Subnet with Public Route Table
-resource "aws_route_table_association" "public_subnet_assoc" {
-  count          = 2
+resource "aws_route_table_association" "jumpbox_public_subnet_assoc" {
+  #count          = 2
   route_table_id = aws_route_table.public_route.id
   subnet_id      = aws_subnet.jumpbox_subnet.id
   depends_on     = [aws_route_table.public_route, aws_subnet.jumpbox_subnet]
+}
+
+
+# Associate web Subnet with Public Route Table (needed?)
+resource "aws_route_table_association" "web_public_subnet_assoc" {
+  for_each                = var.web_subnets
+  route_table_id = aws_route_table.public_route.id
+  subnet_id      = aws_subnet.web_subnets[each.key].id
+  depends_on     = [aws_route_table.public_route, aws_subnet.web_subnets]
 }

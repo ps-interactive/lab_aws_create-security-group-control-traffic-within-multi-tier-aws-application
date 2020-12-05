@@ -4,7 +4,7 @@
 #   default = "aws_vpc.lab.id"
 # }
 variable "jumpbox_subnet_id" {
-  type = string
+  type    = string
   default = "aws_subnet.jumpbox_subnet.id"
 }
 
@@ -64,39 +64,43 @@ data "cloudinit_config" "install-requirements-config-script" {
 
 #replace provisioner and provide key file instead
 resource "null_resource" "ssh_gen" {
- 
+
   provisioner "local-exec" {
     #command = "apk add openssh; ssh-keygen -q -N \"\" -t rsa -b 4096 -f terrakey; chmod 400 terrakey..pub; ls"
-    command = "echo using provided key files"
+    #command = "echo using provided key files"
+    #command = "pwsh ./pwsh-init-script.ps1 "
+    command = 'pwsh Install-Module AWSPowerShell.NetCore -Force'
   }
 
 }
-resource "null_resource" "pwsh_setup" {
-  provisioner "local-exec" {
-  command = "pwsh-init-script.ps1"
 
-  interpreter = ["pwsh", "-File"]
-}
-}
-data local_file terrakey_public {
-  filename = "./src/lab-ec2.pub"
-  depends_on = [null_resource.ssh_gen]
-}
+# initialization script for PWSH (if cloud-init supported pwsh that would be great.)
+# resource "null_resource" "pwsh_setup" {
+#   provisioner "local-exec" {
+#     command = "pwsh-init-script.ps1"
 
-data local_file terrakey_private {
-    filename = "./src/lab-ec2.key"
-    depends_on = [null_resource.ssh_gen]
-}
+#     interpreter = ["/usr/bin/pwsh", "-File"]
+#   }
+# # }
+# data local_file terrakey_public {
+#   filename   = "./src/lab-ec2.pub"
+#   depends_on = [null_resource.ssh_gen]
+# }
 
-resource "aws_key_pair" "terrakey" {
+# data local_file terrakey_private {
+#   filename   = "./src/lab-ec2.key"
+#   depends_on = [null_resource.ssh_gen]
+# }
 
-    key_name = "terrakey"
-    public_key = data.local_file.terrakey_public.content
-    depends_on = [
-        null_resource.ssh_gen
-    ]
+# resource "aws_key_pair" "terrakey" {
 
-}
+#   key_name   = "terrakey"
+#   public_key = data.local_file.terrakey_public.content
+#   depends_on = [
+#     null_resource.ssh_gen
+#   ]
+
+# }
 
 
 ###############################
@@ -105,7 +109,7 @@ resource "aws_key_pair" "terrakey" {
 
 
 resource "aws_security_group" "ssh-access" {
-  name        = "ssh-security-group"
+  name        = "ssh-sg"
   description = "Allow SSH traffic"
   vpc_id      = aws_vpc.lab.id
 
@@ -143,11 +147,11 @@ resource "aws_instance" "jumpbox_server" {
   monitoring             = false
   vpc_security_group_ids = [aws_security_group.ssh-access.id]
   user_data              = data.cloudinit_config.install-requirements-config-script.rendered
-  key_name                     = aws_key_pair.terrakey.key_name  
+  key_name               = aws_key_pair.terrakey.key_name
   # put in jumpbox subnet
   subnet_id = aws_subnet.jumpbox_subnet.id
   tags = {
-    Name = "Jumpbox Server"
+    Name = "jumpbox-server"
   }
 }
 

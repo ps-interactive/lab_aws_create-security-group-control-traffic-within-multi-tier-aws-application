@@ -31,3 +31,16 @@ resource "aws_lb_target_group_attachment" "web_tier_tg" {
   target_id        = aws_instance.web_tier[each.key].id
   port             = 80
 }
+
+
+output "aws_lb_dns_name" {
+  value = aws_lb.load_balancer.dns_name
+}
+
+output "aws_lb_id" {
+  value = aws_lb.load_balancer.id
+}
+
+output "aws_lb_arn" {
+  value = aws_lb.load_balancer.arn
+}
