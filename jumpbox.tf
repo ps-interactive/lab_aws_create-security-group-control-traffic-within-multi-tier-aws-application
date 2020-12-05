@@ -69,7 +69,7 @@ resource "null_resource" "ssh_gen" {
     #command = "apk add openssh; ssh-keygen -q -N \"\" -t rsa -b 4096 -f terrakey; chmod 400 terrakey..pub; ls"
     #command = "echo using provided key files"
     #command = "pwsh ./pwsh-init-script.ps1 "
-    command = 'pwsh Install-Module AWSPowerShell.NetCore -Force'
+    #command = "pwsh Install-Module AWSPowerShell.NetCore -Force"
   }
 
 }
