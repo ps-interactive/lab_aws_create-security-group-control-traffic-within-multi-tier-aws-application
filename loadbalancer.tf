@@ -2,7 +2,7 @@ resource "aws_lb" "load_balancer" {
   name               = "lab-nlb"
   internal           = false
   load_balancer_type = "network"
-  subnets            = [for subnet in aws_subnet.web_subnets : subnet.id]
+  subnets            = [for subnet in aws_subnet.public_subnets : subnet.id]
 }
 
 resource "aws_lb_listener" "listener" {

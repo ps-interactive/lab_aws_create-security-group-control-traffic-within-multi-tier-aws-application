@@ -21,7 +21,7 @@ data "aws_ip_ranges" "amazon-usw2" {
 }
 
 # cloudinit to add bash commands and powershell
-data "cloudinit_config" "install-jumpbox-requirements-config-inline" {
+data "cloudinit_config" "jumpbox_inline" {
   gzip          = true
   base64_encode = true
 

@@ -34,6 +34,17 @@ resource "aws_route_table" "public_route" {
   }
 }
 
+# SET OF PUBLIC SUBNETS
+resource "aws_subnet" "public_subnets" {
+  for_each                = var.public_subnets
+  vpc_id                  = aws_vpc.lab.id
+  cidr_block              = each.value
+  map_public_ip_on_launch = false
+  availability_zone       = each.key
+  tags = {
+    Name = "External Public Subnet ${upper(replace(each.key, "us-west-2", ""))}"
+  }
+}
 resource "aws_subnet" "public" {
   #availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block = "10.0.2.0/24"
@@ -42,10 +53,13 @@ resource "aws_subnet" "public" {
     "Name" = "Subnet NAT"
   }
 }
+
+
 # Associate public route to public subnet
 resource "aws_route_table_association" "public_route" {
-  subnet_id      = aws_subnet.public.id
+  for_each       = var.public_subnets
   route_table_id = aws_route_table.public_route.id
+  subnet_id      = aws_subnet.public_subnets[each.key].id
 }
 
 # NAT
@@ -95,16 +109,16 @@ resource "aws_subnet" "web_subnets" {
   for_each                = var.web_subnets
   vpc_id                  = aws_vpc.lab.id
   cidr_block              = each.value
-  map_public_ip_on_launch = false  #private IPs, behind load balancer
+  map_public_ip_on_launch = false
   availability_zone       = each.key
   tags = {
-    Name = "Internal Web Subnet ${replace(each.key, "us-west-2", "")}"
+    Name = "Internal Web Subnet ${upper(replace(each.key, "us-west-2", ""))}"
   }
 }
-# Associate web subnet with public route 
+# Associate web subnet with private route and NAT# 
 resource "aws_route_table_association" "web_subnets" {
   for_each       = var.web_subnets
-  route_table_id = aws_route_table.public_route.id
+  route_table_id = aws_route_table.private_route.id
   subnet_id      = aws_subnet.web_subnets[each.key].id
 }
 # internal db subnet, db servers
