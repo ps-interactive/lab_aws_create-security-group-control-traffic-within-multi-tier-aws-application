@@ -1,6 +1,6 @@
 Exit
 # creates main.zip file with requires files for PS lab
-Remove-Item ./main.zip -Force
+Remove-Item ./main.zip -Force -ErrorAction SilentlyContinue
 Compress-Archive -Path ./*.tf,./*.sh -DestinationPath ./main.zip -Update
 Get-ChildItem ./*.zip
 

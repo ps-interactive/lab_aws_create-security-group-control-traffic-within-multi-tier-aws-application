@@ -95,16 +95,16 @@ resource "aws_subnet" "web_subnets" {
   for_each                = var.web_subnets
   vpc_id                  = aws_vpc.lab.id
   cidr_block              = each.value
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = false  #private IPs, behind load balancer
   availability_zone       = each.key
   tags = {
     Name = "Internal Web Subnet ${replace(each.key, "us-west-2", "")}"
   }
 }
-# Associate web subnet with private route and NAT# # Associate web Subnet with Public Route Table (needed?)
+# Associate web subnet with public route 
 resource "aws_route_table_association" "web_subnets" {
   for_each       = var.web_subnets
-  route_table_id = aws_route_table.private_route.id
+  route_table_id = aws_route_table.public_route.id
   subnet_id      = aws_subnet.web_subnets[each.key].id
 }
 # internal db subnet, db servers

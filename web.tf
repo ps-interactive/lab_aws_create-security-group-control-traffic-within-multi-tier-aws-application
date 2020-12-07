@@ -49,7 +49,7 @@ systemctl start httpd.service
     EOF
 
   tags = {
-    Name        = "web-server-${replace(each.key, "us-west-2", "")}" #hard code?
+    Name        = "web-server-${upper(replace(each.key, "us-west-2", ""))}" #hard code?
     Description = "Web Server In ${each.key}"
   }
 }
