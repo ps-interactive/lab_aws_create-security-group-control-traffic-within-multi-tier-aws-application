@@ -2,14 +2,14 @@ resource "aws_lb" "load_balancer" {
   name               = "lab-nlb"
   internal           = false
   load_balancer_type = "network"
-  subnets            = [for subnet in aws_subnet.web_subnets: subnet.id]
+  subnets            = [for subnet in aws_subnet.web_subnets : subnet.id]
 }
 
 resource "aws_lb_listener" "listener" {
-  load_balancer_arn  = aws_lb.load_balancer.arn
-  for_each           = var.forwarding_port
-  port               = each.key
-  protocol           = each.value
+  load_balancer_arn = aws_lb.load_balancer.arn
+  for_each          = var.forwarding_port
+  port              = each.key
+  protocol          = each.value
 
   default_action {
     target_group_arn = aws_lb_target_group.tg.arn

@@ -59,5 +59,6 @@ sudo pip install aws-shell --ignore-installed
 # install http-aws
 sudo pip install httpaws --ignore-installed
 
-
+# set up pwsh dependencies
+/usr/bin/pwsh Install-Module AWSPowerShell.NetCore -Force
 sudo echo 'end of config script'

@@ -1,20 +1,12 @@
-# variables, outside dependencies
-# variable "vpc_id" {
-#   type = string
-#   default = "aws_vpc.lab.id"
-# }
+
 variable "jumpbox_subnet_id" {
   type    = string
   default = "aws_subnet.jumpbox_subnet.id"
 }
 
-
-
 ###############################
 # JUMPBOX EC2 CONFIG DATA
 ###############################
-
-
 
 # Restrict to EC2 Instance Connect from us-west-2
 data "aws_ip_ranges" "ec2-connect-usw2" {
@@ -29,7 +21,7 @@ data "aws_ip_ranges" "amazon-usw2" {
 }
 
 # cloudinit to add bash commands and powershell
-data "cloudinit_config" "install-requirements-config-inline" {
+data "cloudinit_config" "install-jumpbox-requirements-config-inline" {
   gzip          = true
   base64_encode = true
 
@@ -43,64 +35,23 @@ data "cloudinit_config" "install-requirements-config-inline" {
 }
 
 # cloudinit script
-data "local_file" "shell_script" {
-  filename = "${path.module}/cloud-init-script.sh"
+data "local_file" "jumpbox_shell_script" {
+  filename = "${path.module}/cloud-init-jumpbox.sh"
 }
 
-data "cloudinit_config" "install-requirements-config-script" {
+data "cloudinit_config" "jumpbox_config_script" {
   gzip          = true
   base64_encode = true
 
   part {
     content_type = "text/x-shellscript"
-    content      = data.local_file.shell_script.content
+    content      = data.local_file.jumpbox_shell_script.content
   }
 }
 
 
-###############################
-# KEYPAIR for alternate access
-###############################
 
-#replace provisioner and provide key file instead
-resource "null_resource" "ssh_gen" {
 
-  provisioner "local-exec" {
-    #command = "apk add openssh; ssh-keygen -q -N \"\" -t rsa -b 4096 -f terrakey; chmod 400 terrakey..pub; ls"
-    #command = "echo using provided key files"
-    #command = "pwsh ./pwsh-init-script.ps1 "
-    #command = "pwsh Install-Module AWSPowerShell.NetCore -Force"
-  }
-
-}
-
-# initialization script for PWSH (if cloud-init supported pwsh that would be great.)
-# resource "null_resource" "pwsh_setup" {
-#   provisioner "local-exec" {
-#     command = "pwsh-init-script.ps1"
-
-#     interpreter = ["/usr/bin/pwsh", "-File"]
-#   }
-# # }
-# data local_file terrakey_public {
-#   filename   = "./src/lab-ec2.pub"
-#   depends_on = [null_resource.ssh_gen]
-# }
-
-# data local_file terrakey_private {
-#   filename   = "./src/lab-ec2.key"
-#   depends_on = [null_resource.ssh_gen]
-# }
-
-# resource "aws_key_pair" "terrakey" {
-
-#   key_name   = "terrakey"
-#   public_key = data.local_file.terrakey_public.content
-#   depends_on = [
-#     null_resource.ssh_gen
-#   ]
-
-# }
 
 
 ###############################
@@ -146,14 +97,42 @@ resource "aws_instance" "jumpbox_server" {
   instance_type          = var.jumpbox_instance_type
   monitoring             = false
   vpc_security_group_ids = [aws_security_group.ssh-access.id]
-  user_data              = data.cloudinit_config.install-requirements-config-script.rendered
+  user_data              = data.cloudinit_config.jumpbox_config_script.rendered
   key_name               = aws_key_pair.terrakey.key_name
   # put in jumpbox subnet
   subnet_id = aws_subnet.jumpbox_subnet.id
+  # Add private key file so jumpbox can access other vms
+  # todo: doable via cloudinit? https://stackoverflow.com/a/62105461/2934158
+  provisioner "file" {
+    content     = tls_private_key.pki.private_key_pem
+    destination = "$HOME/.ssh/id_rsa_ec2"
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = tls_private_key.pki.private_key_pem
+      host        = aws_instance.jumpbox_server.public_ip
+    }
+  }
+  # fix key permissions
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 600 ~/.ssh/id_rsa_ec2"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = tls_private_key.pki.private_key_pem
+      host        = aws_instance.jumpbox_server.public_ip
+    }
+  }
   tags = {
-    Name = "jumpbox-server"
+    Name = "jumpbox"
   }
 }
+
+
+
 
 ####################
 # JUMPBOX OUTPUTS

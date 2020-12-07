@@ -1,6 +1,6 @@
 # Open to world
 variable "cidr_block_world" {
-    default = "0.0.0.0/0"
+  default = "0.0.0.0/0"
 }
 
 variable "web_subnets" {
@@ -10,23 +10,25 @@ variable "web_subnets" {
     us-west-2b = "10.0.21.0/24"
   }
 }
+
+
 variable "web_instance_type" {
-  type = string
+  type    = string
   default = "t3.nano"
 }
 
 variable "jumpbox_instance_type" {
-  type = string
+  type    = string
   default = "t3.small"
 }
 
 variable "web_tier_name" {
-  type = string
-  default = "internal-web-server-tier"
+  type    = string
+  default = "internal-web-server"
 }
 variable "forwarding_port" {
   default = {
-    "80"  = "TCP"
+    "80" = "TCP"
   }
 }
 

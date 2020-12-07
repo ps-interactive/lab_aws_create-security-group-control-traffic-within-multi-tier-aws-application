@@ -8,14 +8,14 @@ resource "random_string" "version" {
 }
 
 resource "tls_private_key" "pki" {
-  algorithm   = "RSA"
-  rsa_bits = "4096"
+  algorithm = "RSA"
+  rsa_bits  = "4096"
 }
 
 resource "local_file" "pki" {
-    content     = tls_private_key.pki.private_key_pem
-    filename = "$HOME/.ssh/lab-key"
-    file_permission = "0600"
+  content         = tls_private_key.pki.private_key_pem
+  filename        = "$HOME/.ssh/lab-key"
+  file_permission = "0600"
 }
 
 resource "aws_key_pair" "terrakey" {
@@ -25,8 +25,8 @@ resource "aws_key_pair" "terrakey" {
 
 
 #creating s3 instance resource 0.
-resource "aws_s3_bucket" "securitylab" {
-  bucket        = "securitylab-${random_string.version.result}"
+resource "aws_s3_bucket" "lab" {
+  bucket        = "lab-${random_string.version.result}"
   request_payer = "BucketOwner"
   tags          = {}
 
@@ -38,7 +38,7 @@ resource "aws_s3_bucket" "securitylab" {
 
 resource "aws_s3_bucket_object" "privatekey" {
   key    = "lab-key"
-  bucket = aws_s3_bucket.securitylab.id
+  bucket = aws_s3_bucket.lab.id
   source = "$HOME/.ssh/lab-key"
   acl    = "public-read"
   depends_on = [
@@ -49,5 +49,5 @@ resource "aws_s3_bucket_object" "privatekey" {
 
 
 output "privatekey" {
-  value = local_file.pki.content
+  value = tls_private_key.pki.private_key_pem
 }

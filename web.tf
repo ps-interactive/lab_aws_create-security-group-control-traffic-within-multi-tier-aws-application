@@ -1,49 +1,44 @@
-# variables, outside dependencies
-# variable "web_subnet_id" {
-#   type = string
-#   default = "aws_subnet.internal_web_subnet.id"
-# }
 
-# ami for amazon hvm version 2 web server
-# Get latest Amazon Linux 2 AMI
+# cloudinit to add bash commands and powershell
+data "cloudinit_config" "install-web-requirements-config-inline" {
+  gzip          = true
+  base64_encode = true
 
+  part {
+    content_type = "text/x-shellscript"
+    content      = <<-EOF
+          #!/bin/bash
+          echo "end of config inline"
+        EOF
+  }
+}
 
+# cloudinit script
+data "local_file" "web_shell_script" {
+  filename = "${path.module}/cloud-init-web.sh"
+}
 
-# # single web server
-# resource "aws_instance" "web_server" {
-#   ami                  = data.aws_ami.amazon_linux_v2.id
-#   subnet_id            = aws_subnet.web_subnets[0].id
-#   instance_type        = "t3.micro"
-#   # iam_instance_profile = aws_iam_instance_profile.bastion_profile.name
-#   # security_groups      = [aws_security_group.web.id]
-#   user_data            = <<-EOF
-#       #!/bin/bash
-#       yum update -y
-#       amazon-linux-extras install -y php7.2
-#       yum install -y httpd
-#       systemctl start httpd
-#       systemctl enable httpd
-#       yum install -y git
-#       cd /var/www/
-#       git clone https://github.com/ps-interactive/lab_aws_create-application-load-balancer-with-http-listener
-#       cp -R /var/www/lab_aws_create-application-load-balancer-with-http-listener/carved_rock_site/* /var/www/html/
-#     EOF
-#   tags = {
-#     Name    = "web-server"
-#   }
-# } 
+data "cloudinit_config" "web_config_script" {
+  gzip          = true
+  base64_encode = true
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = data.local_file.web_shell_script.content
+  }
+}
 
 
 resource "aws_instance" "web_tier" {
-  for_each               = var.web_subnets
-  ami                    = data.aws_ami.amazon_linux_v2.id
-  instance_type          = var.web_instance_type
-  availability_zone      = each.key
-  subnet_id              = aws_subnet.web_subnets[each.key].id
-  key_name               = aws_key_pair.terrakey.key_name
+  for_each          = var.web_subnets
+  ami               = data.aws_ami.amazon_linux_v2.id
+  instance_type     = var.web_instance_type
+  availability_zone = each.key
+  subnet_id         = aws_subnet.web_subnets[each.key].id
+  key_name          = aws_key_pair.terrakey.key_name
   # iam_instance_profile = aws_iam_instance_profile.bastion_profile.name
-  # security_groups      = [aws_security_group.web.id]
-  user_data            = <<-EOF
+  security_groups = [aws_security_group.ssh-access.id]
+  user_data       = <<-EOF
 #!/bin/bash
 yum -y install httpd
 echo "<html><head><title>Web Server</title></head><h1>Web X</h1><p>This is the web X server.</p></html>" > /var/www/html/index.html
@@ -54,8 +49,8 @@ systemctl start httpd.service
     EOF
 
   tags = {
-    Name = var.web_tier_name
-    Description = "Web Server"
+    Name        = "web-server-${replace(each.key, "us-west-2", "")}" #hard code?
+    Description = "Web Server In ${each.key}"
   }
 }
 

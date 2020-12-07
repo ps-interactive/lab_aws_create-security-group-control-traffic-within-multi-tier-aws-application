@@ -9,12 +9,12 @@
 
 
 resource "aws_instance" "db_server" {
-  ami                  = data.aws_ami.amazon_linux_v2.id
-  subnet_id            = aws_subnet.internal_db_subnet.id
-  instance_type        = "t3.micro"
+  ami           = data.aws_ami.amazon_linux_v2.id
+  subnet_id     = aws_subnet.db_subnet.id
+  instance_type = "t3.micro"
   # iam_instance_profile = aws_iam_instance_profile.bastion_profile.name
   # security_groups      = [aws_security_group.db.id]
-  user_data            = <<-EOF
+  user_data = <<-EOF
     #!/bin/bash
     curl http://repo.mysql.com/yum/mysql-5.5-community/el/7/x86_64/mysql-community-release-el7-5.noarch.rpm > /tmp/mysql-community-release-el7-5.noarch.rpm
     yum update -y
@@ -29,9 +29,9 @@ resource "aws_instance" "db_server" {
     mysql -u root -p**** < /lab_aws_implement-data-ingestion-solution-using-aws-database-migration-aws/user_perm.sql
     EOF
   tags = {
-    Name    = "database-server"
+    Name = "database-server"
   }
-} 
+}
 
 # # db subnet group
 # resource "aws_db_subnet_group" "db_subnet_group" {
