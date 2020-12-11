@@ -48,6 +48,6 @@ resource "aws_s3_bucket_object" "privatekey" {
 
 
 
-output "privatekey" {
-  value = tls_private_key.pki.private_key_pem
-}
+# output "privatekey" {
+#   value = tls_private_key.pki.private_key_pem
+# }
