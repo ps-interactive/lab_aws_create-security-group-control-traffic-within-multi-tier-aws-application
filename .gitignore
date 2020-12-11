@@ -1,6 +1,7 @@
 # refer https://github.com/github/gitignore/blob/master/Terraform.gitignore
 # Local .terraform directories
 **/.terraform/*
+.terraform*
 
 # .tfstate files
 *.tfstate
