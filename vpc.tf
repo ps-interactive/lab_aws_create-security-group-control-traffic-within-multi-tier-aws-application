@@ -149,4 +149,11 @@ resource "aws_route_table_association" "jumpbox_public_subnet_assoc" {
   subnet_id      = aws_subnet.jumpbox_subnet.id
 }
 
+# Associate NAT subnet (which is in the 'public' subnet) with Public Route Table
+# per guidance at top of https://aws.amazon.com/premiumsupport/knowledge-center/ec2-access-internet-with-NAT-gateway/
+resource "aws_route_table_association" "public_subnet_assoc" {
+  route_table_id = aws_route_table.public_route.id
+  subnet_id      = aws_subnet.public.id
+}
+
 
